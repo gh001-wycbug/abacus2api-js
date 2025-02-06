@@ -5,6 +5,7 @@ import { HTTPException } from "hono/http-exception";
 import { v4 as uuidv4 } from "uuid";
 import { Hono } from "hono";
 import { env, getRuntimeKey } from "hono/adapter";
+import { handle } from "hono/vercel";
 const app = new Hono();
 
 // 定义接口
