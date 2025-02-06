@@ -106,11 +106,11 @@ async function createConversation(
     externalApplicationId: "beec9762a",
   };
 
-  console.log(
-    "Creating conversation with request:",
-    JSON.stringify(reqBody, null, 2)
-  );
-  console.log("Headers:", JSON.stringify(getHeaders(cookie), null, 2));
+  // console.log(
+  //   "Creating conversation with request:",
+  //   JSON.stringify(reqBody, null, 2)
+  // );
+  // console.log("Headers:", JSON.stringify(getHeaders(cookie), null, 2));
 
   const response = await fetch(
     "https://pa002.abacus.ai/cluster-proxy/api/createDeploymentConversation",
@@ -361,7 +361,15 @@ app.post("/v1/chat/completions", async (c) => {
     } finally {
       reader.releaseLock();
     }
-    const mappedModelName = modelMapping[chatReq.llmName] || chatReq.llmName;
+    // 反转 modelMapping 的映射关系
+    const reversedModelMapping: { [key: string]: string } = Object.fromEntries(
+      Object.entries(modelMapping).map(([key, value]) => [value, key])
+    );
+
+    // 将 chatReq.llmName 映射到 reversedModelMapping 中的值
+    const mappedModelName =
+      reversedModelMapping[chatReq.llmName] || chatReq.llmName;
+
     const openAIResp: OpenAIResponse = {
       id: uuidv4(),
       object: "chat.completion",
@@ -380,6 +388,35 @@ app.post("/v1/chat/completions", async (c) => {
 
     return c.json(openAIResp);
   }
+});
+
+app.get("/v1/models", (c) => {
+  const models = [
+    "gpt-4o-mini",
+    "claude-3.5-sonnet",
+    "o3-mini",
+    "o3-mini-high",
+    "o1-mini",
+    "deepseek-r1",
+    "gemini-2-pro",
+    "gemini-2-flash-thinking",
+    "gemini-2-flash",
+    "gemini-1.5-pro",
+    "xai-grok",
+    "deepseek-v3",
+    "llama3-1-405b",
+    "gpt-4o",
+  ].map((key) => ({
+    id: key,
+    object: "model",
+    created: Math.floor(Date.now() / 1000),
+    owned_by: "system",
+  }));
+
+  return c.json({
+    object: "list",
+    data: models,
+  });
 });
 
 // export default {
