@@ -1,11 +1,12 @@
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { cors } from "hono/cors";
-import { HTTPException } from "hono/http-exception";
 import { v4 as uuidv4 } from "uuid";
-import { Hono } from "hono";
-import { env, getRuntimeKey } from "hono/adapter";
 import { handle } from "hono/vercel";
+export const config = {
+  runtime: "edge",
+};
+
 const app = new Hono();
 
 // 定义接口
@@ -360,12 +361,12 @@ app.post("/v1/chat/completions", async (c) => {
     } finally {
       reader.releaseLock();
     }
-
+    const mappedModelName = modelMapping[chatReq.llmName] || chatReq.llmName;
     const openAIResp: OpenAIResponse = {
       id: uuidv4(),
       object: "chat.completion",
       created: Date.now(),
-      model: chatReq.llmName,
+      model: mappedModelName,
       choices: [
         {
           message: {
@@ -381,7 +382,9 @@ app.post("/v1/chat/completions", async (c) => {
   }
 });
 
-export default {
-  port: 8787,
-  fetch: app.fetch,
-};
+// export default {
+//   port: 8787,
+//   fetch: app.fetch,
+// };
+
+export default handle(app);
